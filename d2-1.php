@@ -9,7 +9,7 @@ foreach ($values as $value) {
     if(hasTwoLetters($value)) {
         $twoLetters++;
     }
-    elseif (hasThreeLetters($value)) {
+    if (hasThreeLetters($value)) {
         $threeLetters++;
     }
 }
