@@ -3,74 +3,59 @@ $data = file_get_contents('data/d4-1.txt', true);
 
 $values = explode("\n", $data);
 $calendar = $calendarOfSleep = $calendarOfGuardAsleep = $hoursOfSleep = [];
-$guardId = 0;
 
-foreach ($values as $value) {
-    preg_match('/.(\w+)-(\w+)-(\w+) (\w+):(\w+). (.+)$/', $value, $date);
-    $day = $date[2];
-    $month = $date[3];
-    $hour = $date[4];
-    $minute = $date[5];
-    $text = $date[6];
-
-    if ($hour > 0) {
-        $minute = 0;
-    }
-    $calendar["$day/$month"][intval($minute)] = $text;
-}
-
-foreach ($calendar as $day => $records) {
-    ksort($records);
-    foreach ($records as $minute => $record) {
-        if (guardBeginsShift($record)) {
-            $guardId = guardBeginsShift($record);
-            if (!isset($hoursOfSleep[$guardId])) {
-                $hoursOfSleep[$guardId] = 0;
-            }
-        } elseif (strpos($record, 'asleep')) {
-            for ($x = $minute; $x < 60; $x++) {
-                $calendarOfSleep["$day#$guardId"][intval($x)] = $x;
-                $hoursOfSleep[$guardId]++;
-            }
-        } elseif (strpos($record, 'up')) {
-            for ($x = $minute; $x < 60; $x++) {
-                unset($calendarOfSleep["$day#$guardId"][intval($x)]);
-                $hoursOfSleep[$guardId]--;
-            }
-        }
-    }
-}
+extractInput($values, $calendar);
+setHoursAndCalendarOfSleep($calendar, $guardId = 0, $calendarOfSleep, $hoursOfSleep);
 
 $guardAsleep = findGuardWithTheMostMinutesAsleep($hoursOfSleep);
 $calendarOfGuardAsleep = setCalendar($calendarOfSleep, $guardAsleep);
+$minuteChoosed = asleepMostDuringMinute($calendarOfGuardAsleep);
 
-foreach ($calendarOfGuardAsleep as $minute) {
-    var_dump($minute);
-    die;
+$firstStrategy = $guardAsleep * $minuteChoosed;
+echo $firstStrategy;
+//result > 82324
+
+
+function extractInput($values, &$calendar)
+{
+    foreach ($values as $value) {
+        preg_match('/.(\w+)-(\w+)-(\w+) (\w+):(\w+). (.+)$/', $value, $date);
+        $day = $date[2];
+        $month = $date[3];
+        $hour = $date[4];
+        $minute = $date[5];
+        $text = $date[6];
+
+        if ($hour > 0) {
+            $minute = 0;
+        }
+        $calendar["$day/$month"][intval($minute)] = $text;
+    }
 }
 
-var_dump($calendarOfGuardAsleep);
-die;
-
-
-$count = array_count_values($calendar["$day/$month-$guardId"]);
-var_dump($count);
-die;
-
-
-function setCalendar($calendarOfSleep , $guardAsleep) {
-    foreach ($calendarOfSleep as $key => $value) {
-        if(strpos($key, "#$guardAsleep")) {
-            $calendarGenerated[] = $value;
+function setHoursAndCalendarOfSleep($calendar, $guardId, &$calendarOfSleep, &$hoursOfSleep)
+{
+    foreach ($calendar as $day => $records) {
+        ksort($records);
+        foreach ($records as $minute => $record) {
+            if (guardBeginsShift($record)) {
+                $guardId = guardBeginsShift($record);
+                if (!isset($hoursOfSleep[$guardId])) {
+                    $hoursOfSleep[$guardId] = 0;
+                }
+            } elseif (strpos($record, 'asleep')) {
+                for ($x = $minute; $x < 60; $x++) {
+                    $calendarOfSleep["$day#$guardId"][intval($x)] = $x;
+                    $hoursOfSleep[$guardId]++;
+                }
+            } elseif (strpos($record, 'up')) {
+                for ($x = $minute; $x < 60; $x++) {
+                    unset($calendarOfSleep["$day#$guardId"][intval($x)]);
+                    $hoursOfSleep[$guardId]--;
+                }
+            }
         }
     }
-    return $calendarGenerated;
-}
-
-function findGuardWithTheMostMinutesAsleep($arr) {
-    arsort($arr);
-    $key_of_max = key($arr);
-    return $key_of_max;
 }
 
 function guardBeginsShift($text)
@@ -83,6 +68,35 @@ function guardBeginsShift($text)
         return false;
 }
 
-$numberOfUniqueDuplicate = count(array_unique($duplicates, SORT_REGULAR));
+function setCalendar($calendarOfSleep, $guardAsleep)
+{
+    foreach ($calendarOfSleep as $key => $value) {
+        if (strpos($key, "#$guardAsleep")) {
+            $calendarGenerated[] = $value;
+        }
+    }
+    return $calendarGenerated;
+}
 
-echo $numberOfUniqueDuplicate;
+function asleepMostDuringMinute($arr)
+{
+    $out = array();
+    foreach ($arr as $value) {
+        foreach ($value as $value2) {
+            if (array_key_exists($value2, $out)) {
+                $out[$value2]++;
+            } else {
+                $out[$value2] = 1;
+            }
+        }
+    }
+    $result = array_keys($out, max($out));
+    return $result[0];
+}
+
+function findGuardWithTheMostMinutesAsleep($arr)
+{
+    arsort($arr);
+    $key_of_max = key($arr);
+    return $key_of_max;
+}
