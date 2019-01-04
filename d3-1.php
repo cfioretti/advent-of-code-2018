@@ -6,10 +6,9 @@ $duplicates = [];
 
 foreach ($values as $value) {
     preg_match('/#(\w+) @ (\w+),(\w+): (\w+)x(\w+)/', $value, $inches);
-    $fromTheLeft = $inches[2];
-    $fromTheTop = $inches[3];
-    $wide = $inches[4];
-    $tall = $inches[5];
+
+    //Only with PHP >= 7.0
+    list(, , $fromTheLeft, $fromTheTop, $wide, $tall) = $inches;
 
     for ($row = $fromTheLeft; $row < ($wide + $fromTheLeft); $row++) {
         for ($col = $fromTheTop; $col < ($tall + $fromTheTop); $col++) {
