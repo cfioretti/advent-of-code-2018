@@ -20,11 +20,7 @@ function extractInput($values, &$calendar)
 {
     foreach ($values as $value) {
         preg_match('/.(\w+)-(\w+)-(\w+) (\w+):(\w+). (.+)$/', $value, $date);
-        $day = $date[2];
-        $month = $date[3];
-        $hour = $date[4];
-        $minute = $date[5];
-        $text = $date[6];
+        list(, , $day, $month, $hour, $minute, $text) = $date;
 
         if ($hour > 0) {
             $minute = 0;
