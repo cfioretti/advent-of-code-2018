@@ -6,12 +6,8 @@ $partial = $overlap = [];
 
 foreach ($values as $value) {
     preg_match('/#(\w+) @ (\w+),(\w+): (\w+)x(\w+)/', $value, $inches);
+    list(, $idClaim, $fromTheLeft, $fromTheTop, $wide, $tall) = $inches;
     $unique = true;
-    $idClaim = $inches[1];
-    $fromTheLeft = $inches[2];
-    $fromTheTop = $inches[3];
-    $wide = $inches[4];
-    $tall = $inches[5];
 
     for ($row = $fromTheLeft; $row < ($wide + $fromTheLeft); $row++) {
         for ($col = $fromTheTop; $col < ($tall + $fromTheTop); $col++) {
@@ -30,6 +26,6 @@ foreach ($values as $value) {
 
 $result = array_diff(array_unique($partial), array_unique($overlap));
 
-if(count($result) == 1) {
+if (count($result) == 1) {
     print_r($result);
 }
